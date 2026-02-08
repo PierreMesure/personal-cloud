@@ -1,0 +1,33 @@
+---
+- name: "Create directory for {{ item.name }}"
+  file:
+    path: "/opt/{{ item.name }}"
+    state: directory
+    mode: '0755'
+
+- name: "Deploy .env for {{ item.name }}"
+  template:
+    src: "{{ playbook_dir }}/services/{{ item.name }}/.env.j2"
+    dest: "/opt/{{ item.name }}/.env"
+    mode: '0600'
+  # Only run if the template exists
+  ignore_errors: yes
+
+- name: "Deploy Compose file for {{ item.name }}"
+  template:
+    src: "{{ playbook_dir }}/services/{{ item.name }}/docker-compose.yml.j2"
+    dest: "/opt/{{ item.name }}/docker-compose.yml"
+    mode: '0644'
+
+- name: "Deploy Caddyfile if it exists"
+  template:
+    src: "{{ playbook_dir }}/services/{{ item.name }}/Caddyfile.j2"
+    dest: "/opt/{{ item.name }}/Caddyfile"
+    mode: '0644'
+  when: query('fileglob', playbook_dir + '/services/' + item.name + '/Caddyfile.j2') | length > 0
+
+- name: "Start {{ item.name }}"
+  community.docker.docker_compose_v2:
+    project_src: "/opt/{{ item.name }}"
+    state: present
+    pull: always

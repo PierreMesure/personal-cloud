@@ -1,0 +1,12 @@
+# Server Configuration
+hcloud_token: "your_hetzner_api_token"
+server_name: "personal-cloud"
+
+# Immich Configuration
+immich_db_password: "super_secret_password_here"
+immich_domain: "immich.domain.com"
+
+# DNS Configuration (OVH)
+dns_zone: "domain.com"
+ovh_bearer_token: "your_bearer_token_here"
+ovh_endpoint_url: "eu.api.ovh.com"

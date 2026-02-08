@@ -1,0 +1,49 @@
+---
+- name: Check if DNS records exist
+  uri:
+    url: "https://{{ ovh_endpoint_url | default('eu.api.ovh.com') }}/v1/domain/zone/{{ dns_zone }}/record?fieldType=A&subDomain={{ lookup('vars', item.name + '_domain') | regex_replace('.' + dns_zone + '$', '') }}"
+    method: GET
+    headers:
+      accept: "application/json"
+      authorization: "Bearer {{ ovh_bearer_token }}"
+  register: existing_records
+  delegate_to: localhost
+  become: no
+  loop: "{{ active_services }}"
+  when: 
+    - dns_zone is defined
+    - lookup('vars', item.name + '_domain', default='') != ''
+
+- name: Create missing DNS records
+  uri:
+    url: "https://{{ ovh_endpoint_url | default('eu.api.ovh.com') }}/v1/domain/zone/{{ dns_zone }}/record"
+    method: POST
+    headers:
+      accept: "application/json"
+      authorization: "Bearer {{ ovh_bearer_token }}"
+      content-type: "application/json"
+    body_format: json
+    body:
+      fieldType: "A"
+      subDomain: "{{ lookup('vars', item.item.name + '_domain') | regex_replace('.' + dns_zone + '$', '') }}"
+      target: "{{ ansible_host }}"
+      ttl: 0
+    status_code: 200
+  delegate_to: localhost
+  become: no
+  loop: "{{ existing_records.results }}"
+  when: 
+    - not item.skipped | default(false)
+    - item.json | length == 0
+
+- name: Refresh DNS zone
+  uri:
+    url: "https://{{ ovh_endpoint_url | default('eu.api.ovh.com') }}/v1/domain/zone/{{ dns_zone }}/refresh"
+    method: POST
+    headers:
+      accept: "application/json"
+      authorization: "Bearer {{ ovh_bearer_token }}"
+  delegate_to: localhost
+  become: no
+  run_once: true
+  when: dns_zone is defined

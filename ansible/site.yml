@@ -1,0 +1,44 @@
+---
+# Play 1: Discover the server on Hetzner
+- name: Discover Hetzner Infrastructure
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - vars.yml
+  roles:
+    - hcloud_discovery
+
+# Play 2: Provision the discovered server
+- name: Provision the personal cloud
+  hosts: discovered_vps
+  become: yes
+  vars_files:
+    - vars.yml
+  vars:
+    docker_users: ["root"]
+
+    # List of services to deploy
+    active_services:
+      - name: immich
+        version: v2
+      - name: caddy
+
+  tasks:
+    - name: Run common configuration
+      include_role:
+        name: common
+
+    - name: Run docker installation
+      include_role:
+        name: docker
+
+    - name: Configure DNS records
+      include_role:
+        name: dns
+
+    - name: Deploy active services
+      include_role:
+        name: docker_service
+      with_items: "{{ active_services }}"
+      loop_control:
+        loop_var: item
