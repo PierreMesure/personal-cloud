@@ -1,0 +1,34 @@
+---
+- name: Unmount SSHFS if it exists
+  mount:
+    path: /mnt/storage-box
+    state: unmounted
+
+- name: Install CIFS utilities
+  apt:
+    name: cifs-utils
+    state: present
+
+- name: Create credentials file
+  copy:
+    content: |
+      username={{ storage_box_username }}
+      password={{ storage_box_password }}
+    dest: /etc/storage-box.credentials
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Create mount point
+  file:
+    path: /mnt/storage-box
+    state: directory
+    mode: '0755'
+
+- name: Mount Storage Box via CIFS
+  mount:
+    path: /mnt/storage-box
+    src: "//{{ storage_box_host }}/backup"
+    fstype: cifs
+    opts: "credentials=/etc/storage-box.credentials,uid=0,gid=0,file_mode=0777,dir_mode=0777,sec=ntlmssp,cache=none"
+    state: mounted

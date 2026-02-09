@@ -2,6 +2,10 @@
 hcloud_token: "your_hetzner_api_token"
 server_name: "personal-cloud"
 
+# Storage Box Configuration
+storage_box_name: "storage-box-example"
+storage_box_password: "your_storage_box_password"
+
 # Immich Configuration
 immich_db_password: "super_secret_password_here"
 immich_domain: "immich.domain.com"

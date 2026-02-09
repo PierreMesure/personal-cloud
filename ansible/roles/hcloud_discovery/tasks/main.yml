@@ -14,11 +14,23 @@
   delegate_to: localhost
   become: no
 
+- name: Fetch Storage Box info
+  hetzner.hcloud.storage_box:
+    api_token: "{{ hcloud_token }}"
+    name: "{{ storage_box_name }}"
+    state: present
+  register: storage_box_info
+  delegate_to: localhost
+  become: no
+
 - name: Add discovered server to inventory
   add_host:
     name: "{{ server_info.hcloud_server_info[0].name }}"
     ansible_host: "{{ server_info.hcloud_server_info[0].ipv4_address }}"
     ansible_user: root
     groups: discovered_vps
+    # Pass storage box info to the host
+    storage_box_username: "{{ storage_box_info.hcloud_storage_box.username }}"
+    storage_box_host: "{{ storage_box_info.hcloud_storage_box.server }}"
   delegate_to: localhost
   become: no

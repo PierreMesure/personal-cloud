@@ -36,9 +36,17 @@
       include_role:
         name: dns
 
+    - name: Mount Storage Box
+      include_role:
+        name: storage
+
     - name: Deploy active services
       include_role:
         name: docker_service
       with_items: "{{ active_services }}"
       loop_control:
         loop_var: item
+
+    - name: Configure automated backups
+      include_role:
+        name: backup
