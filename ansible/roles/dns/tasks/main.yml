@@ -1,12 +1,12 @@
 ---
-- name: Check if DNS records exist
+- name: Check if A records exist
   uri:
     url: "https://{{ ovh_endpoint_url | default('eu.api.ovh.com') }}/v1/domain/zone/{{ dns_zone }}/record?fieldType=A&subDomain={{ lookup('vars', item.name + '_domain') | regex_replace('.' + dns_zone + '$', '') }}"
     method: GET
     headers:
       accept: "application/json"
       authorization: "Bearer {{ ovh_bearer_token }}"
-  register: existing_records
+  register: existing_a_records
   delegate_to: localhost
   become: no
   loop: "{{ active_services }}"
@@ -14,7 +14,7 @@
     - dns_zone is defined
     - lookup('vars', item.name + '_domain', default='') != ''
 
-- name: Create missing DNS records
+- name: Create missing A records
   uri:
     url: "https://{{ ovh_endpoint_url | default('eu.api.ovh.com') }}/v1/domain/zone/{{ dns_zone }}/record"
     method: POST
@@ -31,7 +31,45 @@
     status_code: 200
   delegate_to: localhost
   become: no
-  loop: "{{ existing_records.results }}"
+  loop: "{{ existing_a_records.results }}"
+  when: 
+    - not item.skipped | default(false)
+    - item.json | length == 0
+
+- name: Check if AAAA records exist
+  uri:
+    url: "https://{{ ovh_endpoint_url | default('eu.api.ovh.com') }}/v1/domain/zone/{{ dns_zone }}/record?fieldType=AAAA&subDomain={{ lookup('vars', item.name + '_domain') | regex_replace('.' + dns_zone + '$', '') }}"
+    method: GET
+    headers:
+      accept: "application/json"
+      authorization: "Bearer {{ ovh_bearer_token }}"
+  register: existing_aaaa_records
+  delegate_to: localhost
+  become: no
+  loop: "{{ active_services }}"
+  when: 
+    - dns_zone is defined
+    - lookup('vars', item.name + '_domain', default='') != ''
+    - ansible_host_v6 is defined
+
+- name: Create missing AAAA records
+  uri:
+    url: "https://{{ ovh_endpoint_url | default('eu.api.ovh.com') }}/v1/domain/zone/{{ dns_zone }}/record"
+    method: POST
+    headers:
+      accept: "application/json"
+      authorization: "Bearer {{ ovh_bearer_token }}"
+      content-type: "application/json"
+    body_format: json
+    body:
+      fieldType: "AAAA"
+      subDomain: "{{ lookup('vars', item.item.name + '_domain') | regex_replace('.' + dns_zone + '$', '') }}"
+      target: "{{ ansible_host_v6 }}"
+      ttl: 0
+    status_code: 200
+  delegate_to: localhost
+  become: no
+  loop: "{{ existing_aaaa_records.results }}"
   when: 
     - not item.skipped | default(false)
     - item.json | length == 0

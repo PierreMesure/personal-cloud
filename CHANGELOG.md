@@ -31,4 +31,5 @@ All notable changes to this project and the target server will be documented in 
 - Updated Immich configuration to store uploads on the mounted Storage Box (`/mnt/storage-box/immich-library`).
 - Migrated Storage Box mount from SSHFS to CIFS (Samba) for improved stability and kernel-level performance. Implemented secure credential management via `/etc/storage-box.credentials`.
 - Optimized Immich Machine Learning by switching to the `-armnn` image tag for improved facial recognition performance on ARM64.
-- Added `backup` role to automate daily logical Postgres backups. Implemented a Bash script scheduled via cron that saves compressed SQL dumps to the Storage Box and retains the last 7 days of history.
+- Added Mealie recipe manager service
+- Implemented full dual-stack IPv4/IPv6 support for DNS. Ansible now automatically fetches the server's IPv6 address from Hetzner and creates both A and AAAA records via the OVH API.

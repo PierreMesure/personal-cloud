@@ -1,9 +1,3 @@
----
-- name: Unmount SSHFS if it exists
-  mount:
-    path: /mnt/storage-box
-    state: unmounted
-
 - name: Install CIFS utilities
   apt:
     name: cifs-utils

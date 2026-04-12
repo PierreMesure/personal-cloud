@@ -27,9 +27,10 @@
   add_host:
     name: "{{ server_info.hcloud_server_info[0].name }}"
     ansible_host: "{{ server_info.hcloud_server_info[0].ipv4_address }}"
+    # Extract the first address from the IPv6 range (removing the /64)
+    ansible_host_v6: "{{ server_info.hcloud_server_info[0].ipv6 | regex_replace('/64$', '1') }}"
     ansible_user: root
     groups: discovered_vps
-    # Pass storage box info to the host
     storage_box_username: "{{ storage_box_info.hcloud_storage_box.username }}"
     storage_box_host: "{{ storage_box_info.hcloud_storage_box.server }}"
   delegate_to: localhost

@@ -21,6 +21,7 @@
     active_services:
       - name: immich
         version: v2
+      - name: mealie
       - name: caddy
 
   tasks:
@@ -46,7 +47,3 @@
       with_items: "{{ active_services }}"
       loop_control:
         loop_var: item
-
-    - name: Configure automated backups
-      include_role:
-        name: backup

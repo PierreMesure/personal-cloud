@@ -1,0 +1,22 @@
+name: mealie
+
+services:
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:latest
+    container_name: mealie
+    restart: always
+    ports:
+      - "9001:9000"
+    volumes:
+      - mealie-data:/app/data/
+    env_file:
+      - .env
+    networks:
+      - immich_default
+
+networks:
+  immich_default:
+    external: true
+
+volumes:
+  mealie-data:
