@@ -13,5 +13,7 @@ mealie_domain: "mealie.domain.com"
 
 # DNS Configuration (OVH)
 dns_zone: "domain.com"
-ovh_bearer_token: "your_bearer_token_here"
+ovh_application_key: "xxx"
+ovh_application_secret: "yyy"
+ovh_consumer_key: "zzz"
 ovh_endpoint_url: "eu.api.ovh.com"

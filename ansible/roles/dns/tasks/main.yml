@@ -1,86 +1,47 @@
 ---
-- name: Check if A records exist
+- name: Fetch OVH API time
   uri:
-    url: "https://{{ ovh_endpoint_url | default('eu.api.ovh.com') }}/v1/domain/zone/{{ dns_zone }}/record?fieldType=A&subDomain={{ lookup('vars', item.name + '_domain') | regex_replace('.' + dns_zone + '$', '') }}"
+    url: "https://{{ ovh_endpoint_url | default('eu.api.ovh.com') }}/1.0/auth/time"
     method: GET
-    headers:
-      accept: "application/json"
-      authorization: "Bearer {{ ovh_bearer_token }}"
-  register: existing_a_records
-  delegate_to: localhost
-  become: no
-  loop: "{{ active_services }}"
-  when: 
-    - dns_zone is defined
-    - lookup('vars', item.name + '_domain', default='') != ''
-
-- name: Create missing A records
-  uri:
-    url: "https://{{ ovh_endpoint_url | default('eu.api.ovh.com') }}/v1/domain/zone/{{ dns_zone }}/record"
-    method: POST
-    headers:
-      accept: "application/json"
-      authorization: "Bearer {{ ovh_bearer_token }}"
-      content-type: "application/json"
-    body_format: json
-    body:
-      fieldType: "A"
-      subDomain: "{{ lookup('vars', item.item.name + '_domain') | regex_replace('.' + dns_zone + '$', '') }}"
-      target: "{{ ansible_host }}"
-      ttl: 0
+    return_content: true
     status_code: 200
+  register: ovh_time_response
   delegate_to: localhost
   become: no
-  loop: "{{ existing_a_records.results }}"
-  when: 
-    - not item.skipped | default(false)
-    - item.json | length == 0
+  run_once: true
+  when: dns_zone is defined
 
-- name: Check if AAAA records exist
-  uri:
-    url: "https://{{ ovh_endpoint_url | default('eu.api.ovh.com') }}/v1/domain/zone/{{ dns_zone }}/record?fieldType=AAAA&subDomain={{ lookup('vars', item.name + '_domain') | regex_replace('.' + dns_zone + '$', '') }}"
-    method: GET
-    headers:
-      accept: "application/json"
-      authorization: "Bearer {{ ovh_bearer_token }}"
-  register: existing_aaaa_records
-  delegate_to: localhost
-  become: no
-  loop: "{{ active_services }}"
-  when: 
+- name: Ensure A records exist
+  include_tasks: ensure_record.yml
+  vars:
+    record_type: "A"
+    target_value: "{{ ansible_host }}"
+  when: dns_zone is defined
+
+- name: Ensure AAAA records exist
+  include_tasks: ensure_record.yml
+  vars:
+    record_type: "AAAA"
+    target_value: "{{ ansible_host_v6 }}"
+  when:
     - dns_zone is defined
-    - lookup('vars', item.name + '_domain', default='') != ''
     - ansible_host_v6 is defined
 
-- name: Create missing AAAA records
-  uri:
-    url: "https://{{ ovh_endpoint_url | default('eu.api.ovh.com') }}/v1/domain/zone/{{ dns_zone }}/record"
-    method: POST
-    headers:
-      accept: "application/json"
-      authorization: "Bearer {{ ovh_bearer_token }}"
-      content-type: "application/json"
-    body_format: json
-    body:
-      fieldType: "AAAA"
-      subDomain: "{{ lookup('vars', item.item.name + '_domain') | regex_replace('.' + dns_zone + '$', '') }}"
-      target: "{{ ansible_host_v6 }}"
-      ttl: 0
-    status_code: 200
-  delegate_to: localhost
-  become: no
-  loop: "{{ existing_aaaa_records.results }}"
-  when: 
-    - not item.skipped | default(false)
-    - item.json | length == 0
-
 - name: Refresh DNS zone
+  vars:
+    ovh_request_url: "https://{{ ovh_endpoint_url | default('eu.api.ovh.com') }}/1.0/domain/zone/{{ dns_zone }}/refresh"
+    ovh_api_timestamp: "{{ ovh_time_response.content | trim }}"
+    ovh_signature: "{{ ('$1$' ~ (ovh_application_secret ~ '+' ~ ovh_consumer_key ~ '+POST+' ~ ovh_request_url ~ '++' ~ ovh_api_timestamp) | hash('sha1')) }}"
   uri:
-    url: "https://{{ ovh_endpoint_url | default('eu.api.ovh.com') }}/v1/domain/zone/{{ dns_zone }}/refresh"
+    url: "{{ ovh_request_url }}"
     method: POST
     headers:
       accept: "application/json"
-      authorization: "Bearer {{ ovh_bearer_token }}"
+      X-Ovh-Application: "{{ ovh_application_key }}"
+      X-Ovh-Consumer: "{{ ovh_consumer_key }}"
+      X-Ovh-Timestamp: "{{ ovh_api_timestamp }}"
+      X-Ovh-Signature: "{{ ovh_signature }}"
+    status_code: 200
   delegate_to: localhost
   become: no
   run_once: true

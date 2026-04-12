@@ -10,8 +10,7 @@
     src: "{{ playbook_dir }}/services/{{ item.name }}/.env.j2"
     dest: "/opt/{{ item.name }}/.env"
     mode: '0600'
-  # Only run if the template exists
-  ignore_errors: yes
+  when: query('fileglob', playbook_dir + '/services/' + item.name + '/.env.j2') | length > 0
 
 - name: "Deploy Compose file for {{ item.name }}"
   template:
