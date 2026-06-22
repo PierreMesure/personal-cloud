@@ -1,0 +1,25 @@
+name: vikunja
+
+services:
+  vikunja:
+    image: vikunja/vikunja:latest
+    container_name: vikunja
+    user: "0:0"
+    restart: always
+    env_file:
+      - .env
+    expose:
+      - "3456"
+    volumes:
+      - vikunja-files:/app/vikunja/files
+      - vikunja-db:/db
+    networks:
+      - immich_default
+
+networks:
+  immich_default:
+    external: true
+
+volumes:
+  vikunja-files:
+  vikunja-db:

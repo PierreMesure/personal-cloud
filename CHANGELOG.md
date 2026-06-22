@@ -33,3 +33,10 @@ All notable changes to this project and the target server will be documented in 
 - Optimized Immich Machine Learning by switching to the `-armnn` image tag for improved facial recognition performance on ARM64.
 - Added Mealie recipe manager service
 - Implemented full dual-stack IPv4/IPv6 support for DNS. Ansible now automatically fetches the server's IPv6 address from Hetzner and creates both A and AAAA records via the OVH API.
+
+## v2026-06-08
+
+### Added
+
+- Added Vikunja task management service with automatic deployment through the shared `docker_service` role.
+- Added reverse proxy routing and DNS-managed domain support for Vikunja.
