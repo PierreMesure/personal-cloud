@@ -40,3 +40,14 @@ All notable changes to this project and the target server will be documented in 
 
 - Added Vikunja task management service with automatic deployment through the shared `docker_service` role.
 - Added reverse proxy routing and DNS-managed domain support for Vikunja.
+
+## v2026-07-08
+
+### Added
+
+- Added Karakeep service deployment with official `web`, `chrome`, and `meilisearch` containers via the shared `docker_service` role.
+- Added Karakeep domain routing through Caddy and automatic DNS-managed domain support.
+
+### Changed
+
+- Extended `ansible/vars.yml.example` with the Karakeep domain and required authentication/search secrets.

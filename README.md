@@ -2,7 +2,7 @@
 
 Here's the gitops repository for my personal server. Feel free to have a look for inspiration.
 
-Currently managed services include Immich, Mealie, Vikunja, and Caddy for reverse proxy/TLS.
+Currently managed services include Immich, Mealie, Karakeep, Vikunja, and Caddy for reverse proxy/TLS.
 
 ## 🚀 Quick Start
 

@@ -8,8 +8,11 @@ storage_box_password: "your_storage_box_password"
 
 # Immich Configuration
 immich_db_password: "super_secret_password_here"
+karakeep_nextauth_secret: "generate_with_openssl_rand_base64_36"
+karakeep_meili_master_key: "generate_with_openssl_rand_base64_36_then_strip_non_alnum"
 immich_domain: "immich.domain.com"
 mealie_domain: "mealie.domain.com"
+karakeep_domain: "save.domain.com"
 vikunja_domain: "projects.domain.com"
 
 # DNS Configuration (OVH)

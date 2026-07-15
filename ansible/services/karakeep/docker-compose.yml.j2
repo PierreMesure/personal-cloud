@@ -1,0 +1,59 @@
+name: karakeep
+
+services:
+  web:
+    image: ghcr.io/karakeep-app/karakeep:${KARAKEEP_VERSION:-release}
+    container_name: karakeep_web
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MEILI_ADDR: http://karakeep_meilisearch:7700
+      BROWSER_WEB_URL: http://karakeep_chrome:9222
+      DATA_DIR: /data
+    expose:
+      - "3000"
+    volumes:
+      - karakeep-data:/data
+    depends_on:
+      - chrome
+      - meilisearch
+    networks:
+      - immich_default
+
+  chrome:
+    image: gcr.io/zenika-hub/alpine-chrome:124
+    container_name: karakeep_chrome
+    restart: unless-stopped
+    command:
+      - --no-sandbox
+      - --disable-gpu
+      - --disable-dev-shm-usage
+      - --remote-debugging-address=0.0.0.0
+      - --remote-debugging-port=9222
+      - --hide-scrollbars
+      - --disable-blink-features=AutomationControlled
+      - --window-size=1440,900
+    networks:
+      - immich_default
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.41.0
+    container_name: karakeep_meilisearch
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - karakeep-meili:/meili_data
+    networks:
+      - immich_default
+
+networks:
+  immich_default:
+    external: true
+
+volumes:
+  karakeep-data:
+  karakeep-meili:
