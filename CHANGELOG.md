@@ -2,6 +2,12 @@
 
 All notable changes to this project and the target server will be documented in this file.
 
+## v2026-08-26
+
+### Fixed
+
+- Switched Karakeep's Chrome container from the billing-gated GCR image to Karakeep's public GHCR image.
+
 ## v2026-07-15
 
 ### Changed

@@ -1,0 +1,150 @@
+name: Deploy personal cloud
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - ansible/**
+      - deploy.sh
+      - .github/workflows/deploy.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: personal-cloud-production
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: "3.14"
+  UV_VERSION: "0.12.5"
+  ANSIBLE_CORE_VERSION: "2.20.8"
+
+jobs:
+  preflight:
+    name: Validate Ansible
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5.0.1
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: ansible/requirements.yml
+
+      - name: Install pinned Ansible tooling
+        run: |
+          uv python install "$PYTHON_VERSION"
+          uv venv --python "$PYTHON_VERSION" "$RUNNER_TEMP/ansible-venv"
+          uv pip install --python "$RUNNER_TEMP/ansible-venv/bin/python" \
+            "ansible-core==${ANSIBLE_CORE_VERSION}" \
+            "requests==2.32.4" \
+            "python-dateutil==2.9.0.post0"
+          export PATH="$RUNNER_TEMP/ansible-venv/bin:$PATH"
+          echo "$RUNNER_TEMP/ansible-venv/bin" >> "$GITHUB_PATH"
+          ansible-galaxy collection install -r ansible/requirements.yml
+
+      - name: Check playbook syntax
+        working-directory: ansible
+        run: |
+          cp vars.yml.example vars.yml
+          ansible-playbook --syntax-check site.yml
+
+  deploy:
+    name: Deploy to production
+    needs: preflight
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5.0.1
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: ansible/requirements.yml
+
+      - name: Install pinned Ansible tooling
+        run: |
+          uv python install "$PYTHON_VERSION"
+          uv venv --python "$PYTHON_VERSION" "$RUNNER_TEMP/ansible-venv"
+          uv pip install --python "$RUNNER_TEMP/ansible-venv/bin/python" \
+            "ansible-core==${ANSIBLE_CORE_VERSION}" \
+            "requests==2.32.4" \
+            "python-dateutil==2.9.0.post0"
+          export PATH="$RUNNER_TEMP/ansible-venv/bin:$PATH"
+          echo "$RUNNER_TEMP/ansible-venv/bin" >> "$GITHUB_PATH"
+          ansible-galaxy collection install -r ansible/requirements.yml
+
+      - name: Configure deployment credentials
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+          STORAGE_BOX_PASSWORD: ${{ secrets.STORAGE_BOX_PASSWORD }}
+          IMMICH_DB_PASSWORD: ${{ secrets.IMMICH_DB_PASSWORD }}
+          KARAKEEP_NEXTAUTH_SECRET: ${{ secrets.KARAKEEP_NEXTAUTH_SECRET }}
+          KARAKEEP_MEILI_MASTER_KEY: ${{ secrets.KARAKEEP_MEILI_MASTER_KEY }}
+          KARAKEEP_OPENROUTER_API_KEY: ${{ secrets.KARAKEEP_OPENROUTER_API_KEY }}
+          INFOMANIAK_API_TOKEN: ${{ secrets.INFOMANIAK_API_TOKEN }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_NAME: ${{ vars.SERVER_NAME }}
+          STORAGE_BOX_NAME: ${{ vars.STORAGE_BOX_NAME }}
+          IMMICH_DOMAIN: ${{ vars.IMMICH_DOMAIN }}
+          MEALIE_DOMAIN: ${{ vars.MEALIE_DOMAIN }}
+          KARAKEEP_DOMAIN: ${{ vars.KARAKEEP_DOMAIN }}
+          VIKUNJA_DOMAIN: ${{ vars.VIKUNJA_DOMAIN }}
+          DNS_ZONE: ${{ vars.DNS_ZONE }}
+        run: |
+          test -n "$SSH_PRIVATE_KEY"
+          export PATH="$RUNNER_TEMP/ansible-venv/bin:$PATH"
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          mappings = {
+              "hcloud_token": "HCLOUD_TOKEN",
+              "server_name": "SERVER_NAME",
+              "storage_box_name": "STORAGE_BOX_NAME",
+              "storage_box_password": "STORAGE_BOX_PASSWORD",
+              "immich_db_password": "IMMICH_DB_PASSWORD",
+              "karakeep_nextauth_secret": "KARAKEEP_NEXTAUTH_SECRET",
+              "karakeep_meili_master_key": "KARAKEEP_MEILI_MASTER_KEY",
+              "karakeep_openrouter_api_key": "KARAKEEP_OPENROUTER_API_KEY",
+              "immich_domain": "IMMICH_DOMAIN",
+              "mealie_domain": "MEALIE_DOMAIN",
+              "karakeep_domain": "KARAKEEP_DOMAIN",
+              "vikunja_domain": "VIKUNJA_DOMAIN",
+              "dns_zone": "DNS_ZONE",
+              "infomaniak_api_token": "INFOMANIAK_API_TOKEN",
+          }
+          missing = [source for source in mappings.values() if not os.environ.get(source)]
+          if missing:
+              raise SystemExit("Missing GitHub Environment values/secrets: " + ", ".join(missing))
+          values = {target: os.environ[source] for target, source in mappings.items()}
+          Path("ansible/vars.yml").write_text(json.dumps(values, indent=2) + "\n")
+          PY
+          umask 077
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          eval "$(ssh-agent -s)"
+          ssh-add "$HOME/.ssh/id_ed25519"
+          echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> "$GITHUB_ENV"
+
+      - name: Run Ansible deployment
+        run: PATH="$RUNNER_TEMP/ansible-venv/bin:$PATH" ./deploy.sh
+
+      - name: Remove deployment credentials
+        if: always()
+        run: |
+          rm -f ansible/vars.yml "$HOME/.ssh/id_ed25519"
