@@ -19,3 +19,13 @@ To provision the server or apply configuration changes, run:
 ```bash
 ./deploy.sh
 ```
+
+## DNS at Infomaniak
+
+The DNS role manages the A and AAAA records for the configured service domains.
+Create an API token in Infomaniak Manager with `dns:read` and `dns:write` scopes:
+
+```yaml
+dns_zone: "example.com"
+infomaniak_api_token: "..."
+```

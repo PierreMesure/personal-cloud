@@ -1,46 +1,8 @@
 ---
-- name: "Check if {{ record_type }} records exist"
-  vars:
-    ovh_request_url: "https://{{ ovh_endpoint_url | default('eu.api.ovh.com') }}/1.0/domain/zone/{{ dns_zone }}/record?fieldType={{ record_type }}&subDomain={{ lookup('vars', item.name + '_domain') | regex_replace('.' + dns_zone + '$', '') }}"
-    ovh_api_timestamp: "{{ ovh_time_response.content | trim }}"
-    ovh_signature: "{{ ('$1$' ~ (ovh_application_secret ~ '+' ~ ovh_consumer_key ~ '+GET+' ~ ovh_request_url ~ '++' ~ ovh_api_timestamp) | hash('sha1')) }}"
-  uri:
-    url: "{{ ovh_request_url }}"
-    method: GET
-    headers:
-      accept: "application/json"
-      X-Ovh-Application: "{{ ovh_application_key }}"
-      X-Ovh-Consumer: "{{ ovh_consumer_key }}"
-      X-Ovh-Timestamp: "{{ ovh_api_timestamp }}"
-      X-Ovh-Signature: "{{ ovh_signature }}"
-  register: existing_records
-  delegate_to: localhost
-  become: no
+- name: Ensure {{ record_type }} record for each configured service
+  ansible.builtin.include_tasks: manage_record.yml
   loop: "{{ active_services }}"
-  when: lookup('vars', item.name + '_domain', default='') != ''
-
-- name: "Create missing {{ record_type }} records"
-  vars:
-    ovh_request_url: "https://{{ ovh_endpoint_url | default('eu.api.ovh.com') }}/1.0/domain/zone/{{ dns_zone }}/record"
-    ovh_api_timestamp: "{{ ovh_time_response.content | trim }}"
-    ovh_request_body: "{{ {'fieldType': record_type, 'subDomain': (lookup('vars', item.item.name + '_domain') | regex_replace('.' + dns_zone + '$', '')), 'target': target_value, 'ttl': 0} | to_json }}"
-    ovh_signature: "{{ ('$1$' ~ (ovh_application_secret ~ '+' ~ ovh_consumer_key ~ '+POST+' ~ ovh_request_url ~ '+' ~ ovh_request_body ~ '+' ~ ovh_api_timestamp) | hash('sha1')) }}"
-  uri:
-    url: "{{ ovh_request_url }}"
-    method: POST
-    headers:
-      accept: "application/json"
-      content-type: "application/json"
-      X-Ovh-Application: "{{ ovh_application_key }}"
-      X-Ovh-Consumer: "{{ ovh_consumer_key }}"
-      X-Ovh-Timestamp: "{{ ovh_api_timestamp }}"
-      X-Ovh-Signature: "{{ ovh_signature }}"
-    body_format: raw
-    body: "{{ ovh_request_body }}"
-    status_code: 200
-  delegate_to: localhost
-  become: no
-  loop: "{{ existing_records.results }}"
-  when:
-    - not item.skipped | default(false)
-    - item.json | length == 0
+  loop_control:
+    loop_var: dns_service
+    label: "{{ dns_service.name }}"
+  when: lookup('vars', dns_service.name + '_domain', default='') != ''

@@ -15,9 +15,8 @@ mealie_domain: "mealie.domain.com"
 karakeep_domain: "save.domain.com"
 vikunja_domain: "projects.domain.com"
 
-# DNS Configuration (OVH)
+# DNS Configuration
 dns_zone: "domain.com"
-ovh_application_key: "xxx"
-ovh_application_secret: "yyy"
-ovh_consumer_key: "zzz"
-ovh_endpoint_url: "eu.api.ovh.com"
+# Create a scoped token in Infomaniak Manager with dns:read and dns:write.
+# Keep the real token in ansible/vars.yml, which must not be committed.
+infomaniak_api_token: "your_infomaniak_api_token"
