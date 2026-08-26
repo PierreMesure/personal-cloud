@@ -8,6 +8,10 @@ All notable changes to this project and the target server will be documented in 
 
 - Switched Karakeep's Chrome container from the billing-gated GCR image to Karakeep's public GHCR image.
 
+### Changed
+
+- Upgraded Immich from the v2 release channel to v3, retaining the ARMNN machine-learning image.
+
 ## v2026-07-15
 
 ### Changed
