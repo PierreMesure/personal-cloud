@@ -98,11 +98,11 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SERVER_NAME: ${{ vars.SERVER_NAME }}
           STORAGE_BOX_NAME: ${{ vars.STORAGE_BOX_NAME }}
-          IMMICH_DOMAIN: ${{ vars.IMMICH_DOMAIN }}
-          MEALIE_DOMAIN: ${{ vars.MEALIE_DOMAIN }}
-          KARAKEEP_DOMAIN: ${{ vars.KARAKEEP_DOMAIN }}
-          VIKUNJA_DOMAIN: ${{ vars.VIKUNJA_DOMAIN }}
-          DNS_ZONE: ${{ vars.DNS_ZONE }}
+          IMMICH_DOMAIN: ${{ secrets.IMMICH_DOMAIN }}
+          MEALIE_DOMAIN: ${{ secrets.MEALIE_DOMAIN }}
+          KARAKEEP_DOMAIN: ${{ secrets.KARAKEEP_DOMAIN }}
+          VIKUNJA_DOMAIN: ${{ secrets.VIKUNJA_DOMAIN }}
+          DNS_ZONE: ${{ secrets.DNS_ZONE }}
         run: |
           test -n "$SSH_PRIVATE_KEY"
           export PATH="$RUNNER_TEMP/ansible-venv/bin:$PATH"

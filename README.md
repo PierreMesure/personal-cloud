@@ -47,11 +47,15 @@ Configure these secrets in the `production` environment:
 - `KARAKEEP_OPENROUTER_API_KEY`
 - `INFOMANIAK_API_TOKEN`
 - `SSH_PRIVATE_KEY`: the private key used to connect to the VPS as `root`.
+- `IMMICH_DOMAIN`
+- `MEALIE_DOMAIN`
+- `KARAKEEP_DOMAIN`
+- `VIKUNJA_DOMAIN`
+- `DNS_ZONE`.
 
 Configure these non-sensitive Environment variables there as well:
 
-`SERVER_NAME`, `STORAGE_BOX_NAME`, `IMMICH_DOMAIN`, `MEALIE_DOMAIN`,
-`KARAKEEP_DOMAIN`, `VIKUNJA_DOMAIN`, and `DNS_ZONE`.
+`SERVER_NAME` and `STORAGE_BOX_NAME`.
 
 The runner assembles a temporary `ansible/vars.yml` from these values and removes
 it after deployment; no credentials are committed to the repository.
