@@ -7,10 +7,12 @@ All notable changes to this project and the target server will be documented in 
 ### Fixed
 
 - Switched Karakeep's Chrome container from the billing-gated GCR image to Karakeep's public GHCR image.
+- Recreate Caddy when its bind-mounted configuration changes so new hostnames take effect immediately.
 
 ### Changed
 
 - Upgraded Immich from the v2 release channel to v3, retaining the ARMNN machine-learning image.
+- Added Multica self-hosting with separate frontend and API hostnames, persistent PostgreSQL storage, and Caddy WebSocket routing.
 
 ## v2026-07-15
 

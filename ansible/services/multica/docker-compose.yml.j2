@@ -1,0 +1,62 @@
+name: multica
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: multica_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - multica_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U multica -d multica"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - multica_internal
+
+  backend:
+    image: ghcr.io/multica-ai/multica-backend:${MULTICA_IMAGE_TAG:-latest}
+    container_name: multica_backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    expose:
+      - "8080"
+    volumes:
+      - multica_uploads:/app/data/uploads
+    restart: unless-stopped
+    networks:
+      - multica_internal
+      - immich_default
+
+  frontend:
+    image: ghcr.io/multica-ai/multica-web:${MULTICA_IMAGE_TAG:-latest}
+    container_name: multica_frontend
+    depends_on:
+      - backend
+    environment:
+      HOSTNAME: "0.0.0.0"
+      REMOTE_API_URL: http://multica_backend:8080
+    expose:
+      - "3000"
+    restart: unless-stopped
+    networks:
+      - multica_internal
+      - immich_default
+
+networks:
+  immich_default:
+    external: true
+  multica_internal:
+    name: multica_internal
+
+volumes:
+  multica_pgdata:
+  multica_uploads:

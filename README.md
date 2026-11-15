@@ -2,7 +2,7 @@
 
 Here's the gitops repository for my personal server. Feel free to have a look for inspiration.
 
-Currently managed services include Immich, Mealie, Karakeep, Vikunja, and Caddy for reverse proxy/TLS.
+Currently managed services include Immich, Mealie, Karakeep, Vikunja, Multica, and Caddy for reverse proxy/TLS.
 
 ## 🚀 Quick Start
 
@@ -52,6 +52,15 @@ Configure these secrets in the `production` environment:
 - `KARAKEEP_DOMAIN`
 - `VIKUNJA_DOMAIN`
 - `DNS_ZONE`.
+- `MULTICA_DB_PASSWORD`
+- `MULTICA_JWT_SECRET`
+- `MULTICA_DOMAIN`
+- `MULTICA_API_DOMAIN`
+- `MULTICA_RESEND_API_KEY` (optional; configure an email provider for login codes)
+
+Multica is configured with signups enabled initially. Configure `MULTICA_RESEND_API_KEY`
+before exposing it publicly so verification codes are delivered by email rather than
+written to the backend log; disable signups after creating the initial account.
 
 Configure these non-sensitive Environment variables there as well:
 

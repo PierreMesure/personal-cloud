@@ -15,6 +15,14 @@ mealie_domain: "mealie.domain.com"
 karakeep_domain: "save.domain.com"
 vikunja_domain: "projects.domain.com"
 
+# Multica Configuration
+multica_db_password: "generate_a_random_password"
+multica_jwt_secret: "generate_with_openssl_rand_hex_32"
+multica_domain: "kanban.domain.com"
+multica_api_domain: "api.kanban.domain.com"
+# Optional: without this, verification codes are written to the backend log.
+multica_resend_api_key: ""
+
 # DNS Configuration
 dns_zone: "domain.com"
 # Create a scoped token in Infomaniak Manager with dns:read and dns:write.

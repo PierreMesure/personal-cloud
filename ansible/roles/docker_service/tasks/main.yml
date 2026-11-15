@@ -23,6 +23,7 @@
     src: "{{ playbook_dir }}/services/{{ item.name }}/Caddyfile.j2"
     dest: "/opt/{{ item.name }}/Caddyfile"
     mode: '0644'
+  notify: Recreate Caddy after Caddyfile change
   when: query('fileglob', playbook_dir + '/services/' + item.name + '/Caddyfile.j2') | length > 0
 
 - name: "Start {{ item.name }}"

@@ -24,7 +24,12 @@
       - name: mealie
       - name: karakeep
       - name: vikunja
+      - name: multica
       - name: caddy
+
+    # Additional DNS names for services that expose more than one public endpoint.
+    additional_dns_services:
+      - name: multica_api
 
   tasks:
     - name: Run common configuration

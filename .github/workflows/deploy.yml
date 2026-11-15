@@ -103,6 +103,11 @@ jobs:
           KARAKEEP_DOMAIN: ${{ secrets.KARAKEEP_DOMAIN }}
           VIKUNJA_DOMAIN: ${{ secrets.VIKUNJA_DOMAIN }}
           DNS_ZONE: ${{ secrets.DNS_ZONE }}
+          MULTICA_DB_PASSWORD: ${{ secrets.MULTICA_DB_PASSWORD }}
+          MULTICA_JWT_SECRET: ${{ secrets.MULTICA_JWT_SECRET }}
+          MULTICA_DOMAIN: ${{ secrets.MULTICA_DOMAIN }}
+          MULTICA_API_DOMAIN: ${{ secrets.MULTICA_API_DOMAIN }}
+          MULTICA_RESEND_API_KEY: ${{ secrets.MULTICA_RESEND_API_KEY }}
         run: |
           test -n "$SSH_PRIVATE_KEY"
           export PATH="$RUNNER_TEMP/ansible-venv/bin:$PATH"
@@ -125,12 +130,20 @@ jobs:
               "karakeep_domain": "KARAKEEP_DOMAIN",
               "vikunja_domain": "VIKUNJA_DOMAIN",
               "dns_zone": "DNS_ZONE",
+              "multica_db_password": "MULTICA_DB_PASSWORD",
+              "multica_jwt_secret": "MULTICA_JWT_SECRET",
+              "multica_domain": "MULTICA_DOMAIN",
+              "multica_api_domain": "MULTICA_API_DOMAIN",
               "infomaniak_api_token": "INFOMANIAK_API_TOKEN",
+          }
+          optional_mappings = {
+              "multica_resend_api_key": "MULTICA_RESEND_API_KEY",
           }
           missing = [source for source in mappings.values() if not os.environ.get(source)]
           if missing:
               raise SystemExit("Missing GitHub Environment values/secrets: " + ", ".join(missing))
           values = {target: os.environ[source] for target, source in mappings.items()}
+          values.update({target: os.environ.get(source, "") for target, source in optional_mappings.items()})
           Path("ansible/vars.yml").write_text(json.dumps(values, indent=2) + "\n")
           PY
           umask 077

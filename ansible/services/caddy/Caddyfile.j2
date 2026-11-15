@@ -15,3 +15,22 @@
 {{ karakeep_domain }} {
     reverse_proxy karakeep_web:3000
 }
+
+{{ multica_domain }} {
+    # Keep browser traffic same-origin for cookies and CSRF protection.
+    @websocket path /ws /ws/*
+    handle @websocket {
+        reverse_proxy multica_backend:8080 {
+            flush_interval -1
+        }
+    }
+    handle {
+        reverse_proxy multica_frontend:3000
+    }
+}
+
+{{ multica_api_domain }} {
+    reverse_proxy multica_backend:8080 {
+        flush_interval -1
+    }
+}
