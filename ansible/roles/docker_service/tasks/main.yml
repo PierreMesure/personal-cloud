@@ -31,3 +31,8 @@
     project_src: "/opt/{{ item.name }}"
     state: present
     pull: always
+    wait: true
+    wait_timeout: 300
+  environment:
+    # Serialize image pulls to avoid contention on shared containerd layers.
+    COMPOSE_PARALLEL_LIMIT: "1"

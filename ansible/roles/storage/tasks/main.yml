@@ -26,3 +26,23 @@
     fstype: cifs
     opts: "credentials=/etc/storage-box.credentials,uid=0,gid=0,file_mode=0777,dir_mode=0777,sec=ntlmssp,cache=none"
     state: mounted
+
+- name: Create Docker systemd override directory
+  file:
+    path: /etc/systemd/system/docker.service.d
+    state: directory
+    mode: '0755'
+
+- name: Require the photo storage mount before starting Docker
+  copy:
+    content: |
+      [Unit]
+      RequiresMountsFor=/mnt/storage-box
+    dest: /etc/systemd/system/docker.service.d/storage-box.conf
+    mode: '0644'
+  register: docker_storage_dependency
+
+- name: Reload systemd after updating the storage dependency
+  systemd_service:
+    daemon_reload: true
+  when: docker_storage_dependency.changed

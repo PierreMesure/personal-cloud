@@ -20,6 +20,29 @@ To provision the server or apply configuration changes, run:
 ./deploy.sh
 ```
 
+### Server maintenance
+
+Deployment upgrades Ubuntu packages within the installed release, pulls the configured
+container images, and waits up to five minutes for each Compose project to become
+running or healthy. Application releases are pinned in the service templates; review
+upstream upgrade notes and update those pins deliberately.
+
+Before upgrading, stop application writers and back up PostgreSQL, SQLite databases,
+uploaded files, Compose files, and `.env` files. Keep the previous images for recovery;
+database migrations can require restoring the matching backup before downgrading.
+Never use `docker compose down -v` during maintenance.
+
+Reboot during maintenance when `/var/run/reboot-required` exists, then check the
+Storage Box mount, all containers, public HTTPS endpoints, and application readiness
+checks. Docker requires `/mnt/storage-box` to be mounted before starting, so Immich
+cannot start against an empty local photo directory after a reboot.
+
+Ubuntu release upgrades are separate from `./deploy.sh`. Take a fresh VPS snapshot
+with the server shut down, then use the supported `do-release-upgrade` path in a
+persistent `tmux` or `screen` session. Review package removals and preserve the SSH
+and Netplan configuration. Afterwards, re-enable Docker's repository for the new
+Ubuntu codename, update its packages, reboot, and repeat the service checks above.
+
 ## DNS at Infomaniak
 
 The DNS role manages the A and AAAA records for the configured service domains.
